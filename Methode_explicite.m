@@ -69,12 +69,13 @@ F = sparse(J-1,1);
 %A = eye(J-1) + alpha*(ht/hx^2)*(diag(-2*ones(1,J-1))+diag(ones(1,J-2),1)+diag(ones(1,J-2),-1));
 %A=sparse(A);
 
-for n=1:N
+for n=1:5
 
     h_n = h(:,n); % Vecteur de la pression en tout point de l'espace au temps n
 
 
     % Calcul des vecteurs K_r+, K_r- et dTeta à chaque étape temporelle
+    disp(["Iteration :",num2str(n)]);
     hm_p = 0.5*(h_n(2:J)+h_n(3:J+1)); % 0.5(h_j + h_j+1)
     hm_m = 0.5*(h_n(2:J)+h_n(1:J-1)); % 0.5(h_j + h_j+1)
 
@@ -83,16 +84,14 @@ for n=1:N
     Kr_m = Kr(hm_m);
     Kr_m = spdiags(Kr_m,0,J-1,J-1);
 
-    dTeta_n = dh_Teta(h_n);
-    dTeta_n = spdiags(dTeta_n,0,J-1,J-1);
-    coef_Teta = 1./dTeta_n;
+    coef_Teta = 1./dh_Teta(h_n);
+    coef_Teta = spdiags(coef_Teta,0,J-1,J-1);
 
 
-    F(1) = beta*Phi(1,n)/dTeta_n(1);
-    F(J-1) = beta*Phi(J+1,n)/dTeta_n(J+1);
+    F(1) = beta*coef_Teta(1)*Kr_m(1)*Phi(1,n);
+    F(J-1) = beta*coef_Teta(J+1)*Kr_p(J-1)*Phi(J+1,n);
 
 
-    Ap*Kr_p;
     Phi(2:J,n+1) = (I - beta*coef_Teta*(Ap*Kr_p + Am*Kr_m))*Phi(2:J,n) + F;
 
     h(2:J,n+1) = Phi(2:J,n+1) - transpose(z);
@@ -105,10 +104,10 @@ t=[0,t,Tf];
 size(T)
 size(Z)
 size(h)
-
+h;
 figure(1);
 meshc(T,Z,h);
-view([0 90])
-colorbar
-%xlabel("Temps en secondes");
-%ylabel("Température en °C");
+%view([0 90])
+%colorbar
+xlabel("Temps en secondes");
+ylabel("Pression hydraulique");
