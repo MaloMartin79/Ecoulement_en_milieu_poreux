@@ -54,7 +54,7 @@ Kr = @(h) exp(alpha*h) ;
 tetad = 0.15 ;
 tetas = 0.45 ;
 Teta = @(h) tetad + (tetas - tetad)*Kr(h);
-dh_Teta = @(h) alpha*(tetas - tetad)*Kr(h); % Dérivée de Teta en fonction de h
+dTeta = @(h) alpha*(tetas - tetad)*Kr(h); % Dérivée de Teta en fonction de h
 
 
 
@@ -69,7 +69,7 @@ F = sparse(J-1,1);
 %A = eye(J-1) + alpha*(ht/hx^2)*(diag(-2*ones(1,J-1))+diag(ones(1,J-2),1)+diag(ones(1,J-2),-1));
 %A=sparse(A);
 
-for n=1:10
+for n=1:5
 
     h_n = h(:,n); % Vecteur de la pression en tout point de l'espace au temps n
 
@@ -84,15 +84,16 @@ for n=1:10
     Kr_m = Kr(hm_m);
     Kr_m = spdiags(Kr_m,0,J-1,J-1);
 
-    coef_Teta = 1./dh_Teta(h_n);
-    coef_Teta = spdiags(coef_Teta,0,J-1,J-1);
+    cTeta = 1./dTeta(h_n);
+    cTeta = spdiags(cTeta,0,J-1,J-1);
 
 
-    F(1) = beta*coef_Teta(1)*Kr_m(1)*Phi(1,n);
-    F(J-1) = beta*coef_Teta(J+1)*Kr_p(J-1)*Phi(J+1,n);
+    F(1) = beta*cTeta(1)*Kr_m(1)*Phi(1,n);
+    F(J-1) = beta*cTeta(J+1)*Kr_p(J-1)*Phi(J+1,n);
 
+    A = (I + beta*cTeta*(Ap*Kr_p + Am*Kr_m))*Phi(2:J,n)
 
-    Phi(2:J,n+1) = (I - beta*coef_Teta*(Ap*Kr_p + Am*Kr_m))*Phi(2:J,n) + F;
+    Phi(2:J,n+1) = A\( + F;
 
     h(2:J,n+1) = Phi(2:J,n+1) - transpose(z);
 end
@@ -104,7 +105,7 @@ t=[0,t,Tf];
 size(T)
 size(Z)
 size(h)
-
+h;
 figure(1);
 meshc(T,Z,h);
 %view([0 90])
