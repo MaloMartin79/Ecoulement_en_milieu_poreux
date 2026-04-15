@@ -12,15 +12,11 @@
 % tetad = cst ;  teneur en eau pour un sol sec
 % tetas = cst ;  teneur en eau pour un sol saturé
 
-
 clear; close all;
 
 
-
-
-
 Tf = 1; % temps final en jour
-N = 10000; % Nombre de subdivision de l'intervalle de temps [0;TF]
+N = 100; % Nombre de subdivision de l'intervalle de temps [0;TF]
 L = 50; % Limite de l'espace considéré en m
 J = 200; % Nombre de subdivision de l'intervalle en espace [0;L]
 
@@ -29,7 +25,6 @@ z=dz*[1:J-1];
 
 dt=Tf/N;
 t=dt*[1:N-1];
-
 
 
 h = zeros(J+1,N+1); % Pression hydraulique
@@ -60,7 +55,7 @@ beta = (Ks*dt)/(dz^2); % Pour alléger l'écriture
 
 
 
-t = cputime;
+temps = cputime;
 for n=1:N
 
     h_n = h(:,n); % Vecteur de la pression en tout point de l'espace au temps n
@@ -93,21 +88,67 @@ for n=1:N
 
 end
 
-disp(["Temps d'execution :",num2str(cputime-t)]);
+disp(["Temps d'execution :",num2str(cputime-temps)]);
 
-z=[0,z,L];
+tz=[0,z,L];
 t=[0,t,Tf];
-%[T,Z]=meshgrid(t,z);
-
-
-
+%[T,Z]=meshgrid(t,tz);
 
 figure(1);
-plot(z,h(:,1),"Linewidth",2,z,h(:,round(0.1*N)),"Linewidth",2,z,h(:,round(0.3*N)),"Linewidth",2,...
-      z,h(:,round(0.5*N)),"Linewidth",2,z,h(:,round(0.8*N)),"Linewidth",2,z,h(:,N),"Linewidth",2);
+plot(tz,h(:,1),"Linewidth",2,tz,h(:,round(0.1*N)),"Linewidth",2,tz,h(:,round(0.3*N)),"Linewidth",2,...
+      tz,h(:,round(0.5*N)),"Linewidth",2,tz,h(:,round(0.8*N)),"Linewidth",2,tz,h(:,N),"Linewidth",2);
 xlabel("Hauteur z");
 ylabel("Presion hydraulique h");
 legend(["h(z) au temps t=",num2str(0),"jours"],["h(z) au temps t=",num2str(round(Tf)/10),"jours"],...
        ["h(z) au temps t=",num2str(round(3*Tf)/10),"jours"],["h(z) au temps t=",num2str(round(5*Tf)/10),"jours"],...
        ["h(z) au temps t=",num2str(round(8*Tf)/10),"jours"],["h(z) au temps t=",num2str(Tf),"jours"],'Location','northwest');
+
+
+
+%% Solution analytique
+% Calcul de la solution exacte
+nbTermes = 40;
+tt = [0.1,0.3,0.5,0.8,1]*Tf;
+hex = zeros(J+1,length(tt)); % solution exacte
+
+epsilon = exp(alpha*hd);
+c = alpha*(tetas - tetad)/Ks;
+lambda_k = @(k) pi/L*k;
+mu_k = @(k) 1/c*(alpha^2/4 + lambda_k(k)^2);
+
+for j=1:length(tt);
+  t = tt(j);
+  for i=1:length(tz)
+    serie=0; z=tz(i);
+    for k=1:nbTermes
+      serie = serie + (-1)^k*lambda_k(k)/mu_k(k)*sin(lambda_k(k)*z)*exp(-mu_k(k)*t);
+    end
+    hbar = (1-epsilon)*exp(alpha/2*(L-z))*(sinh(alpha/2*z)/sinh(alpha/2*L) + 2/(L*c)*serie);
+    hex(i,j) = 1/alpha*log(hbar+epsilon);
+  end
+end
+
+% Erreur et visualisation de la solution
+erreur = norm(hex(:,3) - h(:,round(0.5*N)))/norm(hex(:,3));
+disp(["Erreur relative au temps t = ", num2str(t)]); disp(erreur);
+
+figure(2); hold on;
+plot(tz,hex(:,3));
+plot(tz,h(:,round(0.5*N)));
+hold off;
+xlabel("Hauteur z");
+ylabel("Presion hydraulique h");
+title("Différence entre solution analytique et solution trouvée");
+legend("Solution exacte","Solution numérique");
+
+figure(3); hold on;
+% plot(tz,Teta(h(:,round(0.5*N))),"Linewidth",2);
+plot(tz,hex(:,1));
+plot(tz,hex(:,2));
+plot(tz,hex(:,3));
+plot(tz,hex(:,4));
+xlabel("Hauteur z");
+ylabel("Theta(h)");
+legend(["t=",num2str(round(1*Tf)/10)],["t=",num2str(round(3*Tf)/10)],["t=",num2str(round(5*Tf)/10)],["t=",num2str(round(8*Tf)/10)]);
+title("Teneur en eau en fonction du temps");
 
