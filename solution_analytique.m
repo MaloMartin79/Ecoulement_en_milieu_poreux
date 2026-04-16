@@ -20,12 +20,6 @@ N = 100; % Nombre de subdivision de l'intervalle de temps [0;TF]
 L = 50; % Limite de l'espace considéré en m
 J = 200; % Nombre de subdivision de l'intervalle en espace [0;L]
 
-dz=L/J; % Pas d'espace
-z=dz*[1:J-1];
-
-dt=Tf/N; % Pas de temps
-t=dt*[1:N-1];
-
 Ks = 0.1 ; % m/Jour
 alpha = 0.1 ; % m^-1
 Kr = @(h) exp(alpha*h) ;
@@ -50,8 +44,10 @@ temps = cputime;
 disp(["Temps d'execution :",num2str(cputime-temps)]);
 
 %% Affichage de la solution
-tz=[0,z,L];
-t=[0,t,Tf];
+dz=L/J; % Pas d'espace
+tz=0:dz:L;
+dt=Tf/N; % Pas de temps
+t=0:dt:Tf;
 %[T,Z]=meshgrid(t,tz);
 
 figure(1);
