@@ -17,20 +17,61 @@ clear; close all;
 %% Données
 Tf = 1; % temps final en jour
 N = 100; % Nombre de subdivision de l'intervalle de temps [0;TF]
-L = 50; % Limite de l'espace considéré en m
-J = 200; % Nombre de subdivision de l'intervalle en espace [0;L]
+L = 30; % Limite de l'espace considéré en m
+J = 100; % Nombre de subdivision de l'intervalle en espace [0;L]
 
 Ks = 0.1 ; % m/Jour
 alpha = 0.1 ; % m^-1
-Kr = @(h) exp(alpha*h) ;
+
+
+% Sable
+Ks = 8.25*1e-5 * 86400; % m/Jour
+alpha = 0.145 ; % m^-1
+m = 0.627;
+n = 1/(1-m);
+thetad = 0.045 ;
+thetas = 0.430 ;
+%
+
+
+% Sable
+Ks = 8.25*1e-5 * 86400; % m/Jour
+alpha = 0.145 ; % m^-1
+m = 0.627;
+n = 1/(1-m);
+thetad = 0.045 ;
+thetas = 0.430 ;
+%
+
+% Argile limoneuse
+Ks = 5.50*1e-6 * 86400; % m/Jour
+alpha = 0.008 ; % m^-1
+m = 0.5;
+n = 1/(1-m);
+thetad = 0.070;
+thetas = 0.360;
+%
+
+% Yolo light clay
+Ks = 9.22*1e-3 * 86400; % m/Jour
+alpha = 0.0335; % cm^-1
 thetad = 0.15 ;
 thetas = 0.45 ;
+%
+
+Se = @(h) (1+(alpha*h).^n).^(-m);
+Kr = @(h) sqrt(Se(h)).*(1-(alpha*h).^(n-1).*Se(h)).^2 ;
+Theta = @(h) thetad + (thetas - thetad)*Se(h);
+dTheta = @(h) - (thetas - thetad)*alpha*m*n*(alpha*h).^(n-1).*(1+(alpha*h).^n).^(-m-1); % Dérivée de theta en fonction de h
+
+Kr = @(h) exp(alpha*h) ;
 Theta = @(h) thetad + (thetas - thetad)*Kr(h);
 dTheta = @(h) alpha*(thetas - thetad)*Kr(h); % Dérivée de theta en fonction de h
 
+
 %% Résolution en h par une méthode semi-implicite
 h = zeros(J+1,N+1); % Pression hydraulique
-hd = -20; % Pression hydraulique d'un sol sec
+hd = -100; % Pression hydraulique d'un sol sec
 h(:,1)= hd*ones(J+1,1); % Condition initiale
 h_0=hd*ones(1,N); % Condition au bord h(0,t) avec t>0
 h(1,2:N+1)=h_0;
@@ -39,7 +80,7 @@ h(J+1,2:N+1)=h_L;
 
 temps = cputime;
 % En argument, h contient déjà les conditions initiales à l'intérieure
-[h]=Semi_implicite(J,L,N,Tf,h,Ks,Kr,dTheta); %
+[h,~]=Semi_implicite(J,L,N,Tf,h,Ks,Kr,dTheta); %
 
 disp(["Temps d'execution :",num2str(cputime-temps)]);
 
@@ -51,13 +92,10 @@ t=0:dt:Tf;
 %[T,Z]=meshgrid(t,tz);
 
 figure(1);
-plot(tz,h(:,1),"Linewidth",2,tz,h(:,round(0.1*N)),"Linewidth",2,tz,h(:,round(0.3*N)),"Linewidth",2,...
-      tz,h(:,round(0.5*N)),"Linewidth",2,tz,h(:,round(0.8*N)),"Linewidth",2,tz,h(:,N),"Linewidth",2);
+plot(tz,h(:,round(0.5*N)),"Linewidth",2);
 xlabel("Hauteur z");
 ylabel("Presion hydraulique h");
-legend(["h(z) au temps t=",num2str(0),"jours"],["h(z) au temps t=",num2str(round(Tf)/10),"jours"],...
-       ["h(z) au temps t=",num2str(round(3*Tf)/10),"jours"],["h(z) au temps t=",num2str(round(5*Tf)/10),"jours"],...
-       ["h(z) au temps t=",num2str(round(8*Tf)/10),"jours"],["h(z) au temps t=",num2str(Tf),"jours"],'Location','northwest');
+legend(["h(z) au temps t=",num2str(round(Tf)/10),"jours"]);
 
 
 %% Solution analytique
@@ -96,22 +134,26 @@ erreur(5) = norm(hex(:,5) - h(:,round(1*N)))/norm(hex(:,3));
 disp(["Erreur relative au temps t = ", num2str(tt)]); disp(erreur);
 
 figure(2); hold on;
-plot(tz,hex(:,3));
-plot(tz,h(:,round(0.5*N)),'o');
+plot(hex(:,3),tz,"LineWidth",3,'Color','g');
+plot(h(:,round(0.5*N)),tz,'o');
+plot(h(:,round(0.3*N)),tz,'o');
+plot(hex(:,end),tz,"LineWidth",3,'Color','c');
+plot(h(:,end),tz,'o');
 hold off;
-xlabel("Hauteur z");
-ylabel("Presion hydraulique h");
+set(gca, 'XAxisLocation', 'top', 'YAxisLocation', 'right');
+ylabel("Hauteur z");
+xlabel("Presion hydraulique h");
 title("Différence entre solution analytique et solution trouvée");
-legend("Solution exacte","Solution numérique");
+legend("Solution exacte","Solution numérique","Location","southeast");
 
-figure(3); hold on;
-% plot(tz,Theta(h(:,round(0.5*N))),"Linewidth",2);
-plot(tz,Theta(hex(:,1)));
-plot(tz,Theta(hex(:,2)));
-plot(tz,Theta(hex(:,3)));
-plot(tz,Theta(hex(:,4)));
-xlabel("Hauteur z");
-ylabel("Theta(h)");
-legend(["t=",num2str(round(1*Tf)/10)],["t=",num2str(round(3*Tf)/10)],["t=",num2str(round(5*Tf)/10)],["t=",num2str(round(8*Tf)/10)]);
-title("Teneur en eau en fonction du temps");
+% figure(3); hold on;
+% % plot(tz,Theta(h(:,round(0.5*N))),"Linewidth",2);
+% plot(tz,Theta(hex(:,1)));
+% plot(tz,Theta(hex(:,2)));
+% plot(tz,Theta(hex(:,3)));
+% plot(tz,Theta(hex(:,4)));
+% xlabel("Hauteur z");
+% ylabel("Theta(h)");
+% % legend(["t=",num2str(round(1*Tf)/10)],["t=",num2str(round(3*Tf)/10)],["t=",num2str(round(5*Tf)/10)],["t=",num2str(round(8*Tf)/10)]);
+% title("Teneur en eau en fonction du temps");
 

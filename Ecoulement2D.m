@@ -16,8 +16,8 @@
 clear; close all;
 
 %% Données
-Tf = 1; % temps final en jour
-N = 100; % Nombre de subdivision de l'intervalle de temps [0;TF]
+Tf = 3600; % temps final en jour
+N = 3600; % Nombre de subdivision de l'intervalle de temps [0;TF]
 a = 30; % Largeur de l'espace considéré en m
 I = 20; % Nombre de subdivision de l'intervalle en espace horizontal [0;a]
 L = 30; % Hauteur de l'espace considéré en m
@@ -25,10 +25,25 @@ J = 20; % Nombre de subdivision de l'intervalle en espace vertical [0;L]
 nbn = (J+1)*(I+1); % Nb total de noeuds du maillage en espace
 
 Ks = 0.1 ; % m/Jour
-alpha = 0.1 ; % m^-1
-Kr = @(h) exp(alpha*h) ; %ones(length(h),1);
+alpha = 0.1 ; % cm^-1
 thetad = 0.15 ;
 thetas = 0.45 ;
+
+% Sable
+Ks = 8.25*1e-5 * 86400; % m/Jour
+alpha = 0.145 ; % cm^-1
+thetad = 0.045 ;
+thetas = 0.430 ;
+%
+
+% Yolo light clay
+Ks = 9.22*1e-5; % m/Jour
+alpha = 0.0335 ; % cm^-1
+thetad = 0.102 ;
+thetas = 0.368 ;
+%
+
+Kr = @(h) exp(alpha*h) ; %ones(length(h),1);
 Theta = @(h) thetad + (thetas - thetad)*Kr(h);
 dTheta = @(h) alpha*(thetas - thetad)*Kr(h); % Dérivée de theta en fonction de h
 hd = -20; % Pression hydraulique d'un sol sec
@@ -63,7 +78,7 @@ h_mid1 = h(:,end);
 [X,Z]=meshgrid(tx,tz);
 h_mid1=reshape(h_mid1,I+1,J+1);
 figure(1);
-meshc(X,Z,h_mid1');
+meshc(X,Z,h_mid1',"FaceColor","interp");
 xlabel("x")
 ylabel("z")
 zlabel("h")
@@ -83,7 +98,16 @@ h_mid = h(:,end);
 [X,Z]=meshgrid(tx,tz);
 h_mid=reshape(h_mid,I+1,J+1);
 figure(2);
-meshc(X,Z,h_mid');
+meshc(X,Z,h_mid',"FaceColor","interp");
+xlabel("x")
+ylabel("z")
+zlabel("h")
+title("Pression hydraulique à la mi-journée")
+
+h_mid = h(:,50);
+h_mid=reshape(h_mid,I+1,J+1);
+figure(3);
+meshc(X,Z,h_mid',"FaceColor","interp");
 xlabel("x")
 ylabel("z")
 zlabel("h")

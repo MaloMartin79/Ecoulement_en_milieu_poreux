@@ -1,4 +1,4 @@
-function [h]=Semi_implicite(J,L,N,Tf,h,Ks,Kr,dTheta)
+function [h,Stab]=Semi_implicite(J,L,N,Tf,h,Ks,Kr,dTheta)
 % Résolution par un schéma volumes finies implicite, du problème suivant :
 %               Ks*d/dz(Kr*d/dz(Phi)) = d/dt(Teta)
 %
@@ -24,6 +24,8 @@ t=dt*[1:N-1];
 beta = (Ks*dt)/(dz^2); % Pour alléger l'écriture
 
 Phi= h + transpose([0,z,L]);
+
+Stab = zeros(N,1);
 
 for n=1:N
 
@@ -51,6 +53,8 @@ for n=1:N
 
     % Résolution du système linéaire par l'algorithme de Thomas
     Phi(2:J,n+1) = A\B;
+
+    %Stab(n,1) = normest(inv(A));
 
     % Calcul de h à l'étape n+1
     h(2:J,n+1) = Phi(2:J,n+1) - z';
