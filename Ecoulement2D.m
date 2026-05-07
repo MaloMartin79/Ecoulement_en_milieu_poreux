@@ -16,7 +16,7 @@
 clear; close all;
 
 %% Données
-Tf = 3600; % temps final en jour
+Tf = 6*3600; % temps final en jour
 N = 3600; % Nombre de subdivision de l'intervalle de temps [0;TF]
 a = 30; % Largeur de l'espace considéré en m
 I = 20; % Nombre de subdivision de l'intervalle en espace horizontal [0;a]
@@ -29,18 +29,19 @@ alpha = 0.1 ; % cm^-1
 thetad = 0.15 ;
 thetas = 0.45 ;
 
-% Sable
-Ks = 8.25*1e-5 * 86400; % m/Jour
-alpha = 0.145 ; % cm^-1
-thetad = 0.045 ;
-thetas = 0.430 ;
-%
 
 % Yolo light clay
 Ks = 9.22*1e-5; % m/Jour
 alpha = 0.0335 ; % cm^-1
 thetad = 0.102 ;
 thetas = 0.368 ;
+%
+
+% Sable
+Ks = 8.25*1e-5; % m/Jour
+alpha = 0.145 ; % cm^-1
+thetad = 0.045 ;
+thetas = 0.430 ;
 %
 
 Kr = @(h) exp(alpha*h) ; %ones(length(h),1);
@@ -102,9 +103,10 @@ meshc(X,Z,h_mid',"FaceColor","interp");
 xlabel("x")
 ylabel("z")
 zlabel("h")
-title("Pression hydraulique à la mi-journée")
+title("Pression hydraulique à la fin")
+colorbar;
 
-h_mid = h(:,50);
+h_mid = h(:,round(N/2));
 h_mid=reshape(h_mid,I+1,J+1);
 figure(3);
 meshc(X,Z,h_mid',"FaceColor","interp");
@@ -112,6 +114,7 @@ xlabel("x")
 ylabel("z")
 zlabel("h")
 title("Pression hydraulique à la mi-journée")
+colorbar;
 
 
 

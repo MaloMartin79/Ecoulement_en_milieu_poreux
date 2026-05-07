@@ -84,7 +84,7 @@ for n=1:N
 
 
 
-    emA = [em(I:end); zeros(I-1,1)], [a(2:end); 0];
+    emA = [em(I:end); zeros(I-1,1)]; [a(2:end); 0];
     aA = [a(2:end); 0];
     cA = [0; c(1:end-1)];
     epA = [zeros(I-1,1); ep(1:end-I+1)];
@@ -146,4 +146,6 @@ for n=1:N
     h(:,n+1) = H_np(:);
 
 end
+
+
 

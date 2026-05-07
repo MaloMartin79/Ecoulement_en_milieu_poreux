@@ -6,15 +6,6 @@ N = 3600; % Nombre de subdivision de l'intervalle de temps [0;TF]
 L = 30; % Limite de l'espace considéré en m
 J = 500; % Nombre de subdivision de l'intervalle en espace [0;L]
 
-% Argile limoneuse
-Ks = 5.50*1e-8; % m/s
-alpha = 0.005 ; % cm^-1
-m = 0.083;
-n = 1/(1-m);
-thetad = 0.070;
-thetas = 0.360;
-%
-
 % Sable
 Ks = 8.25*1e-5 ; % m/s
 alpha = 0.145 ; % cm^-1
@@ -22,6 +13,15 @@ m = 0.627;
 n = 1/(1-m);
 thetad = 0.045 ;
 thetas = 0.430 ;
+%
+
+% Argile limoneuse
+Ks = 5.50*1e-8; % m/s
+alpha = 0.005 ; % cm^-1
+m = 0.083;
+n = 1/(1-m);
+thetad = 0.070;
+thetas = 0.360;
 %
 
 % Yolo light clay
@@ -82,3 +82,11 @@ set(gca, 'XAxisLocation', 'top', 'YAxisLocation', 'right');
 ylabel("altitude z");
 xlabel("Teneur en eau");
 legend("0.5 jour","1 jour","2 jour","5 jour",'location','southeast');
+
+figure(3); hold on
+[Z,TT]=meshgrid(tz,t);
+meshc(TT,Z,real(h'));
+ylabel("altitude z");
+xlabel("Temps [s]");
+title("Pression hydraulique au cours du temps");
+colorbar
